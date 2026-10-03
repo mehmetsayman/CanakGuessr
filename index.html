@@ -180,6 +180,15 @@ h1 em{font-style:normal;color:var(--accent)}
 .chip-day.sel svg.i{color:var(--accent)}
 .okmark{width:44px;height:44px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
 .okmark svg.i{font-size:22px;stroke-width:2.5}
+.note{margin-top:12px;text-align:center;font-size:12.5px;color:var(--muted)}
+.party{position:fixed;inset:0;z-index:1500;display:grid;place-items:center;padding:16px;background:rgba(21,20,18,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .35s}
+.party.on{opacity:1}
+.party-card{width:100%;max-width:360px;background:var(--paper);border-radius:28px;padding:12px 12px 18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);text-align:center;transform:scale(.88) translateY(24px);transition:transform .55s cubic-bezier(.2,1.4,.4,1)}
+.party.on .party-card{transform:none}
+.party-card video{width:100%;max-height:52vh;object-fit:cover;border-radius:20px;display:block;background:var(--bg)}
+.party-card h2{font-size:40px;font-weight:800;letter-spacing:-.05em;margin:16px 0 4px}
+.party-card p{font-size:16px;color:var(--muted);margin-bottom:18px}
+.party-card .btn{width:calc(100% - 12px);margin:0 6px}
 .sent{margin-top:18px;animation:fadeup .5s var(--ease) both}
 .sent p{font-size:16px;line-height:1.5;color:var(--ink-2)}
 .sent p b{color:var(--ink)}
@@ -275,8 +284,7 @@ h1 em{font-style:normal;color:var(--accent)}
       <div class="btns">
         <button class="btn primary block" id="yes"><svg class="i" data-i="coffee"></svg>Olur, içelim</button>
         <button class="btn ghost block" id="other">Başka bir gün olur mu?</button>
-      </div>
-    </div>
+      </div>    </div>
 
     <div class="card step reveal" id="dayStep" hidden>
       <div class="okmark"><svg class="i" data-i="check"></svg></div>
@@ -294,9 +302,19 @@ h1 em{font-style:normal;color:var(--accent)}
   </div>
 </section>
 
+<div class="party" id="party" hidden>
+  <div class="party-card">
+    <video id="kedi" src="foto/kedi.mp4" loop muted playsinline preload="auto"></video>
+    <h2>Yaşasın!</h2>
+    <p>Kediler bile dans ediyor.</p>
+    <button class="btn primary block" id="partyGo">Gün seçelim <svg class="i arrow" data-i="arrow"></svg></button>
+  </div>
+</div>
+
 <div class="toast" id="toast"><svg class="i" data-i="check"></svg><span></span></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script>
 /* =========================================================
    AYARLAR: sadece burayı düzenlemen yeterli
@@ -442,6 +460,7 @@ function turBaslat(){
   img.onerror = () => foto.classList.add('missing');
   img.src = t.foto;
 
+  map.stop(); // önceki turun uçuş animasyonu yarıda kaldıysa durdur
   setTimeout(() => { map.invalidateSize(); map.fitBounds(BOLGE, { padding: [10, 10] }); }, 60);
 }
 
@@ -459,10 +478,12 @@ function tahminEt(){
   ]).addTo(map);
   adimlar();
   $('game').classList.add('sonuc');
+  const buTur = tur, buTahmin = tahmin;
   setTimeout(() => {
+    if (tur !== buTur) return; // bu arada sonraki tura geçildiyse uçma
     map.invalidateSize();
     const masa = window.innerWidth >= 900;
-    map.flyToBounds(L.latLngBounds([tahmin, gercek]), {
+    map.flyToBounds(L.latLngBounds([buTahmin, gercek]), {
       paddingTopLeft: [50, 70], paddingBottomRight: [50, masa ? 330 : 360], maxZoom: 16, duration: 1.1
     });
   }, 480);
@@ -590,7 +611,34 @@ $('guess').onclick = tahminEt;
 $('expand').onclick = e => { e.stopPropagation(); $('photo').classList.add('big'); };
 $('photo').onclick = () => { if ($('photo').classList.contains('big')) $('photo').classList.remove('big'); };
 
-$('yes').onclick = () => {
+/* kutlama: konfeti + dans eden kediler */
+function konfeti(){
+  if (!window.confetti) return;
+  const renk = ['#ee5f1c', '#ffb48a', '#151412', '#fde6d8', '#21453a', '#ffffff'];
+  const ates = o => confetti(Object.assign({ colors: renk, zIndex: 2000, disableForReducedMotion: true }, o));
+  ates({ particleCount: 130, spread: 90, startVelocity: 45, origin: { y: .55 } });
+  setTimeout(() => ates({ particleCount: 70, angle: 60, spread: 60, origin: { x: 0, y: .75 } }), 250);
+  setTimeout(() => ates({ particleCount: 70, angle: 120, spread: 60, origin: { x: 1, y: .75 } }), 400);
+  const bitis = Date.now() + 2200;
+  (function yagmur(){
+    ates({ particleCount: 3, angle: 270, spread: 140, startVelocity: 8, gravity: .7, ticks: 260, origin: { x: Math.random(), y: -.05 } });
+    if (Date.now() < bitis) requestAnimationFrame(yagmur);
+  })();
+}
+function kutla(){
+  const p = $('party'); p.hidden = false;
+  const v = $('kedi'); v.currentTime = 0; v.play().catch(() => {});
+  requestAnimationFrame(() => requestAnimationFrame(() => p.classList.add('on')));
+  konfeti();
+}
+$('partyGo').onclick = () => {
+  const p = $('party'); p.classList.remove('on');
+  setTimeout(() => { p.hidden = true; $('kedi').pause(); }, 350);
+  gunAdimi();
+};
+$('yes').onclick = kutla;
+
+function gunAdimi(){
   $('otherStep').hidden = true;
   const chips = $('chips'); chips.innerHTML = '';
   AYAR.gunler.forEach(g => {
@@ -603,7 +651,7 @@ $('yes').onclick = () => {
     chips.appendChild(b);
   });
   adimAc('dayStep');
-};
+}
 $('other').onclick = () => { $('dayStep').hidden = true; adimAc('otherStep'); };
 $('sendDay').onclick = () => dmAc(`${secilenGun} olur, ADDA'da görüşürüz. (ÇanakGuessr skorum: ${tr(toplam)})`, 'dayStep');
 $('sendOther').onclick = () => dmAc(`Başka bir gün olur. (ÇanakGuessr skorum: ${tr(toplam)})`, 'otherStep');
