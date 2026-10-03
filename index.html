@@ -185,7 +185,10 @@ h1 em{font-style:normal;color:var(--accent)}
 .party.on{opacity:1}
 .party-card{width:100%;max-width:360px;background:var(--paper);border-radius:28px;padding:12px 12px 18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);text-align:center;transform:scale(.88) translateY(24px);transition:transform .55s cubic-bezier(.2,1.4,.4,1)}
 .party.on .party-card{transform:none}
-.party-card video{width:100%;max-height:52vh;object-fit:cover;border-radius:20px;display:block;background:var(--bg)}
+.kedi-sahne{position:relative;display:grid;place-items:center;padding:22px 0 4px}
+.kedi-sahne::before{content:"";position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,#fde6d8 0%,#fde6d8 55%,transparent 72%);animation:nabiz 1.6s ease-in-out infinite}
+.kedi-sahne img{position:relative;width:min(240px,62vw);height:auto;display:block}
+@keyframes nabiz{50%{transform:scale(1.08)}}
 .party-card h2{font-size:40px;font-weight:800;letter-spacing:-.05em;margin:16px 0 4px}
 .party-card p{font-size:16px;color:var(--muted);margin-bottom:18px}
 .party-card .btn{width:calc(100% - 12px);margin:0 6px}
@@ -304,7 +307,7 @@ h1 em{font-style:normal;color:var(--accent)}
 
 <div class="party" id="party" hidden>
   <div class="party-card">
-    <video id="kedi" src="foto/kedi.mp4" loop muted playsinline preload="auto"></video>
+    <div class="kedi-sahne"><img id="kedi" src="foto/kedi.gif" alt="Dans eden kedi"></div>
     <h2>Yaşasın!</h2>
     <p>Kediler bile dans ediyor.</p>
     <button class="btn primary block" id="partyGo">Gün seçelim <svg class="i arrow" data-i="arrow"></svg></button>
@@ -627,13 +630,13 @@ function konfeti(){
 }
 function kutla(){
   const p = $('party'); p.hidden = false;
-  const v = $('kedi'); v.currentTime = 0; v.play().catch(() => {});
+  const k = $('kedi'); k.src = 'foto/kedi.gif?' + Date.now(); // GIF'i baştan başlat
   requestAnimationFrame(() => requestAnimationFrame(() => p.classList.add('on')));
   konfeti();
 }
 $('partyGo').onclick = () => {
   const p = $('party'); p.classList.remove('on');
-  setTimeout(() => { p.hidden = true; $('kedi').pause(); }, 350);
+  setTimeout(() => { p.hidden = true; }, 350);
   gunAdimi();
 };
 $('yes').onclick = kutla;
