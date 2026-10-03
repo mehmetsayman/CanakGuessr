@@ -185,6 +185,9 @@ h1 em{font-style:normal;color:var(--accent)}
 .party.on{opacity:1}
 .party-card{width:100%;max-width:360px;background:var(--paper);border-radius:28px;padding:12px 12px 18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);text-align:center;transform:scale(.88) translateY(24px);transition:transform .55s cubic-bezier(.2,1.4,.4,1)}
 .party.on .party-card{transform:none}
+.party-card{position:relative}
+.ses{position:absolute;top:12px;right:12px;z-index:2;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:var(--bg);color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line)}
+.ses svg.i{font-size:19px}
 .kedi-sahne{position:relative;display:grid;place-items:center;padding:22px 0 4px}
 .kedi-sahne::before{content:"";position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,#fde6d8 0%,#fde6d8 55%,transparent 72%);animation:nabiz 1.6s ease-in-out infinite}
 .kedi-sahne img{position:relative;width:min(240px,62vw);height:auto;display:block}
@@ -307,9 +310,10 @@ h1 em{font-style:normal;color:var(--accent)}
 
 <div class="party" id="party" hidden>
   <div class="party-card">
+    <button class="ses" id="sesBtn" aria-label="Müziği kapat"><svg class="i" data-i="ses"></svg></button>
     <div class="kedi-sahne"><img id="kedi" src="foto/kedi.gif" alt="Dans eden kedi"></div>
     <h2>Yaşasın!</h2>
-    <p>Kediler bile dans ediyor.</p>
+    <p>Kedi bile horona durdu.</p>
     <button class="btn primary block" id="partyGo">Gün seçelim <svg class="i arrow" data-i="arrow"></svg></button>
   </div>
 </div>
@@ -356,7 +360,9 @@ const ICON = {
   clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
   image:'<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-2.8 0L6 21"/>',
   map:'<path d="M14.1 5.6a2 2 0 0 0 1.8 0l3.7-1.9A1 1 0 0 1 21 4.6v12.8a1 1 0 0 1-.6.9l-4.5 2.3a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.7 1.9A1 1 0 0 1 3 19.4V6.6a1 1 0 0 1 .6-.9l4.5-2.3a2 2 0 0 1 1.8 0z"/><path d="M15 5.8v15"/><path d="M9 3.2v15"/>',
-  award:'<circle cx="12" cy="8" r="6"/><path d="M15.5 12.9 17 22l-5-3-5 3 1.5-9.1"/>'
+  award:'<circle cx="12" cy="8" r="6"/><path d="M15.5 12.9 17 22l-5-3-5 3 1.5-9.1"/>',
+  ses:'<path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6a1.4 1.4 0 0 1-1 .4H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.4 18.4a9 9 0 0 0 0-12.8"/>',
+  sessiz:'<path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6a1.4 1.4 0 0 1-1 .4H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>'
 };
 const svg = n => `<svg class="i" viewBox="0 0 24 24">${ICON[n]}</svg>`;
 document.querySelectorAll('[data-i]').forEach(el => {
@@ -628,7 +634,99 @@ function konfeti(){
     if (Date.now() < bitis) requestAnimationFrame(yagmur);
   })();
 }
+/* horon: Web Audio ile çalınan, bize ait küçük bir horon (kemençe + davul + bas), 7/8 ritim (2+2+3) */
+let muzik = null;
+function horonBaslat(){
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC || muzik) return;
+  const ctx = new AC();
+  const master = ctx.createGain(); master.gain.value = 0;
+  master.connect(ctx.destination);
+  master.gain.linearRampToValueAtTime(.3, ctx.currentTime + .4);
+  const yanki = ctx.createDelay(); yanki.delayTime.value = .17;
+  const geri = ctx.createGain(); geri.gain.value = .22;
+  const islak = ctx.createGain(); islak.gain.value = .22;
+  yanki.connect(geri); geri.connect(yanki); yanki.connect(islak); islak.connect(master);
+
+  const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+  const NOTA = { A2:45, E2:40, D3:50, A4:69, B4:71, C5:72, D5:74, E5:76, F5:77, G5:79, A5:81 };
+  const MELODI = [
+    'E5 E5 D5 E5 F5 E5 D5', 'C5 D5 E5 D5 C5 B4 A4', 'E5 E5 D5 E5 F5 G5 F5', 'E5 D5 C5 B4 A4 - -',
+    'A5 A5 G5 A5 G5 F5 E5', 'F5 F5 E5 F5 E5 D5 C5', 'D5 E5 F5 E5 D5 C5 B4', 'C5 B4 A4 B4 A4 - -'
+  ].map(b => b.split(' '));
+  const BAS = ['A2', 'A2', 'A2', 'E2', 'A2', 'D3', 'E2', 'A2'];
+  const ON = .085; // bir 16'lık (sn)
+
+  function kemence(t, n, sure){
+    const f = hz(NOTA[n]);
+    const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), lfo = ctx.createOscillator();
+    o1.type = o2.type = 'sawtooth'; o1.frequency.value = o2.frequency.value = f; o2.detune.value = 8;
+    const lg = ctx.createGain(); lfo.frequency.value = 6.5; lg.gain.value = f * .006;
+    lfo.connect(lg); lg.connect(o1.frequency); lg.connect(o2.frequency);
+    const fl = ctx.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = 1900; fl.Q.value = .8;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.2, t + .012);
+    g.gain.setTargetAtTime(.13, t + .02, .05); g.gain.linearRampToValueAtTime(0, t + sure);
+    o1.connect(fl); o2.connect(fl); fl.connect(g); g.connect(master); g.connect(yanki);
+    [o1, o2, lfo].forEach(o => { o.start(t); o.stop(t + sure + .05); });
+  }
+  function davul(t, guclu){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(guclu ? 125 : 95, t); o.frequency.exponentialRampToValueAtTime(42, t + .13);
+    g.gain.setValueAtTime(guclu ? .95 : .55, t); g.gain.exponentialRampToValueAtTime(.001, t + .2);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + .22);
+  }
+  const gurultu = ctx.createBuffer(1, ctx.sampleRate * .15, ctx.sampleRate);
+  const gv = gurultu.getChannelData(0); for (let i = 0; i < gv.length; i++) gv[i] = Math.random() * 2 - 1;
+  function tek(t, v){
+    const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = gurultu; fl.type = 'highpass'; fl.frequency.value = 2200;
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + .07);
+    s.connect(fl); fl.connect(g); g.connect(master); s.start(t); s.stop(t + .1);
+  }
+  function bas(t, n){
+    const o = ctx.createOscillator(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+    o.type = 'sawtooth'; o.frequency.value = hz(NOTA[n]);
+    fl.type = 'lowpass'; fl.frequency.value = 320;
+    g.gain.setValueAtTime(.32, t); g.gain.exponentialRampToValueAtTime(.001, t + ON * 3.5);
+    o.connect(fl); fl.connect(g); g.connect(master); o.start(t); o.stop(t + ON * 4);
+  }
+
+  let adim = 0, siradaki = ctx.currentTime + .08;
+  const zamanlayici = setInterval(() => {
+    while (siradaki < ctx.currentTime + .12) {
+      const b = Math.floor(adim / 7) % MELODI.length, s = adim % 7, n = MELODI[b][s];
+      if (n !== '-') { let uz = 1; while (s + uz < 7 && MELODI[b][s + uz] === '-') uz++; kemence(siradaki, n, ON * uz * .95); }
+      if (s === 0 || s === 4) davul(siradaki, s === 0);
+      if (s === 2 || s === 6) tek(siradaki, .3);
+      if (s === 3 || s === 5) tek(siradaki, .1);
+      if (s === 0 || s === 4) bas(siradaki, BAS[b]);
+      siradaki += ON; adim++;
+    }
+  }, 25);
+  muzik = { ctx, master, zamanlayici, acik: true };
+  ctx.resume && ctx.resume();
+}
+function horonDurdur(){
+  if (!muzik) return;
+  const { ctx, master, zamanlayici } = muzik; muzik = null;
+  const t = ctx.currentTime;
+  master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t);
+  master.gain.linearRampToValueAtTime(0, t + 1.2);
+  setTimeout(() => { clearInterval(zamanlayici); ctx.close(); }, 1300);
+}
+$('sesBtn').onclick = () => {
+  if (!muzik) return;
+  muzik.acik = !muzik.acik;
+  const t = muzik.ctx.currentTime;
+  muzik.master.gain.cancelScheduledValues(t);
+  muzik.master.gain.setTargetAtTime(muzik.acik ? .3 : 0, t, .05);
+  $('sesBtn').innerHTML = svg(muzik.acik ? 'ses' : 'sessiz');
+  $('sesBtn').setAttribute('aria-label', muzik.acik ? 'Müziği kapat' : 'Müziği aç');
+};
+
 function kutla(){
+  horonBaslat(); // tıklamanın içinde başlamalı, yoksa telefon sesi engeller
   const p = $('party'); p.hidden = false;
   const k = $('kedi'); k.src = 'foto/kedi.gif?' + Date.now(); // GIF'i baştan başlat
   requestAnimationFrame(() => requestAnimationFrame(() => p.classList.add('on')));
@@ -636,6 +734,7 @@ function kutla(){
 }
 $('partyGo').onclick = () => {
   const p = $('party'); p.classList.remove('on');
+  horonDurdur();
   setTimeout(() => { p.hidden = true; }, 350);
   gunAdimi();
 };
