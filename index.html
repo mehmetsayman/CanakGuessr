@@ -303,10 +303,10 @@ h1 em{font-style:normal;color:var(--accent)}
    ========================================================= */
 const AYAR = {
   instagram: "ensarenesakkus",                 // ← kendi Instagram kullanıcı adın (@ olmadan)
-  // Kızla olan sohbetinin linki. Bilgisayarda instagram.com/direct/inbox → onunla olan sohbete tıkla →
-  // adres çubuğundaki linki buraya yapıştır (örn. "https://www.instagram.com/direct/t/1234567890/").
-  // Boş bırakırsan ig.me linki kullanılır (bu sadece İçerik Üreticisi / İşletme hesaplarında çalışır).
-  sohbetLinki: "https://www.instagram.com/direct/t/111042420294457/",
+  // Boş bırakırsan ig.me/m/kullaniciadi kullanılır: Instagram uygulamasında sohbeti direkt açan resmi link.
+  // ÖNEMLİ: ig.me sadece Profesyonel (İçerik Üreticisi / İşletme) hesaplarda çalışır.
+  // (instagram.com/direct/t/... linkleri uygulamada sohbet açmıyor, kullanma.)
+  sohbetLinki: "",
   gunler: ["Cuma akşamı", "Cumartesi", "Pazar"], // ← sana uyan günler
   turlar: [
     { foto: "foto/1.jpg", ad: "Saat Kulesi", lat: 40.14966, lng: 26.40206, kredi: "Hüseyin Öcal · CC BY 3.0",
@@ -551,10 +551,14 @@ function dmAc(metin, kartId){
   kopyala(metin); // sessizce panoya da koy; yapıştırmak isterse hazır olsun
   const link = AYAR.sohbetLinki || ('https://ig.me/m/' + encodeURIComponent(AYAR.instagram));
   const btns = $(kartId).querySelector('.btns');
+  const profil = 'https://www.instagram.com/' + encodeURIComponent(AYAR.instagram) + '/';
   if (btns) btns.outerHTML = `
     <div class="sent">
-      <p><b>Sohbetimiz açılıyor…</b> Açılmazsa aşağıdaki butona dokun.</p>
-      <a class="btn primary block" href="${link}" style="margin-top:14px">${svg('send')}Sohbeti aç</a>
+      <p><b>Sohbetimiz açılıyor…</b> Açılmazsa aşağıdaki butonlara dokun.</p>
+      <div class="btns" style="margin-top:14px">
+        <a class="btn primary block" href="${link}">${svg('send')}Sohbeti aç</a>
+        <a class="btn ghost block" href="${profil}">Profilime git</a>
+      </div>
     </div>`;
   setTimeout(() => { location.href = link; }, 350);
 }
