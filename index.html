@@ -312,7 +312,7 @@ h1 em{font-style:normal;color:var(--accent)}
   <div class="party-card">
     <button class="ses" id="sesBtn" aria-label="Müziği kapat"><svg class="i" data-i="ses"></svg></button>
     <div class="kedi-sahne"><img id="kedi" src="foto/kedi.gif" alt="Dans eden kedi"></div>
-    <audio id="sarki" src="foto/horon.mp3" loop preload="auto"></audio>
+    <audio id="sarki" src="foto/horon.mp3" preload="auto"></audio>
     <h2>Yaşasın!</h2>
     <p>Kedi bile horona durdu.</p>
     <button class="btn primary block" id="partyGo">Gün seçelim <svg class="i arrow" data-i="arrow"></svg></button>
@@ -639,6 +639,11 @@ function konfeti(){
 /* arka plan şarkısı: foto/horon.mp3 (Cimilli İbo - Oyna, ilk 90 sn). Tıklamanın içinde başlar. */
 const sarki = $('sarki');
 let muzik = null, sonumZamanlayici = null;
+sarki.addEventListener('ended', () => { // başa değil, başlangıç saniyesine dön
+  if (!muzik) return;
+  sarki.currentTime = AYAR.muzikBaslangic || 0;
+  const p = sarki.play(); if (p) p.catch(() => {});
+});
 function horonBaslat(){
   clearInterval(sonumZamanlayici);
   sarki.muted = false; sarki.volume = 1;
