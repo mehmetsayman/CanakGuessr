@@ -303,10 +303,6 @@ h1 em{font-style:normal;color:var(--accent)}
    ========================================================= */
 const AYAR = {
   instagram: "ensarenesakkus",                 // ← kendi Instagram kullanıcı adın (@ olmadan)
-  // Boş bırakırsan ig.me/m/kullaniciadi kullanılır: Instagram uygulamasında sohbeti direkt açan resmi link.
-  // ÖNEMLİ: ig.me sadece Profesyonel (İçerik Üreticisi / İşletme) hesaplarda çalışır.
-  // (instagram.com/direct/t/... linkleri uygulamada sohbet açmıyor, kullanma.)
-  sohbetLinki: "",
   gunler: ["Cuma akşamı", "Cumartesi", "Pazar"], // ← sana uyan günler
   turlar: [
     { foto: "foto/1.jpg", ad: "Saat Kulesi", lat: 40.14966, lng: 26.40206, kredi: "Hüseyin Öcal · CC BY 3.0",
@@ -547,17 +543,25 @@ function kopyala(metin){
   return Promise.resolve(eski());
 }
 
+/* Web linkleri (ig.me, instagram.com) tarayıcıda açılıp giriş istiyor.
+   Bunun yerine Instagram uygulamasını doğrudan açan uygulama linki kullanılıyor. */
+function uygulamaLinki(){
+  const u = encodeURIComponent(AYAR.instagram);
+  return /android/i.test(navigator.userAgent)
+    ? `intent://user?username=${u}#Intent;package=com.instagram.android;scheme=instagram;end`
+    : `instagram://user?username=${u}`;
+}
+
 function dmAc(metin, kartId){
   kopyala(metin); // sessizce panoya da koy; yapıştırmak isterse hazır olsun
-  const link = AYAR.sohbetLinki || ('https://ig.me/m/' + encodeURIComponent(AYAR.instagram));
+  const link = uygulamaLinki();
   const btns = $(kartId).querySelector('.btns');
-  const profil = 'https://www.instagram.com/' + encodeURIComponent(AYAR.instagram) + '/';
   if (btns) btns.outerHTML = `
     <div class="sent">
-      <p><b>Sohbetimiz açılıyor…</b> Açılmazsa aşağıdaki butonlara dokun.</p>
+      <p><b>Instagram açılıyor…</b> Profilimde <b>Mesaj gönder</b>'e dokunman yeterli.</p>
+      <p style="margin-top:8px">Linki sohbetimizden açtıysan bu sayfayı kapatman da yeter, sohbetimiz hemen arkada.</p>
       <div class="btns" style="margin-top:14px">
-        <a class="btn primary block" href="${link}">${svg('send')}Sohbeti aç</a>
-        <a class="btn ghost block" href="${profil}">Profilime git</a>
+        <a class="btn primary block" href="${link}">${svg('send')}Instagram'da aç</a>
       </div>
     </div>`;
   setTimeout(() => { location.href = link; }, 350);
