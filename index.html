@@ -545,26 +545,39 @@ function kopyala(metin){
 
 /* Web linkleri (ig.me, instagram.com) tarayıcıda açılıp giriş istiyor.
    Bunun yerine Instagram uygulamasını doğrudan açan uygulama linki kullanılıyor. */
-function uygulamaLinki(){
+const UA = navigator.userAgent;
+const MOBIL = /android|iphone|ipad|ipod/i.test(UA) || (navigator.maxTouchPoints > 1 && /macintosh/i.test(UA));
+
+/* Telefonda: Instagram uygulamasını doğrudan açan uygulama linki (tarayıcıya uğramaz, giriş istemez).
+   Bilgisayarda: uygulama olmadığı için web profili yeni sekmede. */
+function instagramLinki(){
   const u = encodeURIComponent(AYAR.instagram);
-  return /android/i.test(navigator.userAgent)
+  if (!MOBIL) return `https://www.instagram.com/${u}/`;
+  return /android/i.test(UA)
     ? `intent://user?username=${u}#Intent;package=com.instagram.android;scheme=instagram;end`
     : `instagram://user?username=${u}`;
+}
+function instagramAc(){
+  const link = instagramLinki();
+  if (MOBIL) location.href = link;
+  else window.open(link, '_blank', 'noopener');
 }
 
 function dmAc(metin, kartId){
   kopyala(metin); // sessizce panoya da koy; yapıştırmak isterse hazır olsun
-  const link = uygulamaLinki();
   const btns = $(kartId).querySelector('.btns');
   if (btns) btns.outerHTML = `
     <div class="sent">
-      <p><b>Instagram açılıyor…</b> Profilimde <b>Mesaj gönder</b>'e dokunman yeterli.</p>
-      <p style="margin-top:8px">Linki sohbetimizden açtıysan bu sayfayı kapatman da yeter, sohbetimiz hemen arkada.</p>
+      <p>${MOBIL ? 'Linki sohbetimizden açtıysan bu sayfayı kapatman yeterli, sohbetimiz hemen arkada.'
+                 : 'Instagram profilim yeni sekmede açıldı.'}</p>
+      <p style="margin-top:8px">${MOBIL ? 'Ya da' : 'Açılmadıysa'} aşağıdaki butona dokun, profilimde <b>Mesaj gönder</b>'e basman yeterli.</p>
       <div class="btns" style="margin-top:14px">
-        <a class="btn primary block" href="${link}">${svg('send')}Instagram'da aç</a>
+        <button class="btn primary block ig-ac">${svg('send')}Instagram'da aç</button>
       </div>
     </div>`;
-  setTimeout(() => { location.href = link; }, 350);
+  const igBtn = $(kartId).querySelector('.ig-ac');
+  if (igBtn) igBtn.onclick = instagramAc;
+  instagramAc();
 }
 
 /* olaylar */
